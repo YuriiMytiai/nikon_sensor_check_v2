@@ -3,6 +3,7 @@ from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter, QColor, QPen
 import rawpy
 import numpy as np
 import qimage2ndarray
+from functools import partial
 
 
 class ImageProcessor:
@@ -36,14 +37,15 @@ class ImageProcessor:
         self.img_scroll_area.setWidget(self.img_label)
 
     def connect_btns_with_handlers(self):
-        self.proc_blk_pic_btn.clicked.connect(self.blk_btn_handler)
-        self.proc_wht_pic_btn.clicked.connect(self.wht_btn_handler)
+        self.proc_blk_pic_btn.clicked.connect(partial(self.btns_handler, 'blk'))
+        self.proc_wht_pic_btn.clicked.connect(partial(self.btns_handler, 'wht'))
 
-    def blk_btn_handler(self):
+    def btns_handler(self, img_type):
         # get image path:
-        pic_path = self.events_processor.files_loader.blk_pic_path
+        pic_path = self.events_processor.files_loader.blk_pic_path if img_type == 'blk' else self.events_processor.files_loader.wht_pic_path
         if pic_path is None:
-            self.raise_err_window('Black')
+            img_name = 'Black' if img_type == 'blk' else 'White'
+            self.raise_err_window(img_name)
             return
 
         # get rgb thresholds
@@ -53,51 +55,23 @@ class ImageProcessor:
         raw_img = rawpy.imread(str(pic_path))
         rgb = raw_img.postprocess()
 
-        broken_pixel_coordinates = self.find_broken_pixels(rgb, rgb_thresholds, 'blk')
+        broken_pixel_coordinates = self.find_broken_pixels(rgb, rgb_thresholds, img_type)
 
         qt_image = QImage(qimage2ndarray.array2qimage(rgb))
 
         miniature_pixmap = QPixmap.fromImage(qt_image)
-        miniature_pixmap = self.highlight_broken_pixels(miniature_pixmap, broken_pixel_coordinates, miniature=True)
+        miniature_pixmap = self.highlight_broken_pixels(miniature_pixmap, broken_pixel_coordinates, miniature=True, img_type=img_type)
         self.image_preview_label.setPixmap(miniature_pixmap)
 
         pixmap = QPixmap.fromImage(qt_image)
-        pixmap = self.highlight_broken_pixels(pixmap, broken_pixel_coordinates)
+        pixmap = self.highlight_broken_pixels(pixmap, broken_pixel_coordinates, img_type=img_type)
         self.img_label.setPixmap(pixmap)
         self.img_label.resize(self.img_label.pixmap().size())
 
         self.print_info(broken_pixel_coordinates)
 
-    def wht_btn_handler(self):
-        # get image path:
-        pic_path = self.events_processor.files_loader.wht_pic_path
-        if pic_path is None:
-            self.raise_err_window('White')
-            return
-
-        # get rgb thresholds
-        rgb_thresholds = self.events_processor.rgb_thr_processor.get_thresholds()
-
-        # load img
-        raw_img = rawpy.imread(str(pic_path))
-        rgb = raw_img.postprocess()
-
-        broken_pixel_coordinates = self.find_broken_pixels(rgb, rgb_thresholds, 'wht')
-
-        qt_image = QImage(qimage2ndarray.array2qimage(rgb))
-
-        miniature_pixmap = QPixmap.fromImage(qt_image)
-        miniature_pixmap = self.highlight_broken_pixels(miniature_pixmap, broken_pixel_coordinates, miniature=True, img_type='wht')
-        self.image_preview_label.setPixmap(miniature_pixmap)
-
-        pixmap = QPixmap.fromImage(qt_image)
-        pixmap = self.highlight_broken_pixels(pixmap, broken_pixel_coordinates, img_type='wht')
-        self.img_label.setPixmap(pixmap)
-        self.img_label.resize(self.img_label.pixmap().size())
-
-        self.print_info(broken_pixel_coordinates)
-
-    def raise_err_window(self, image_name):
+    @staticmethod
+    def raise_err_window(image_name):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
         msg.setText(f'{image_name} image was not chosen! Please, select an image')

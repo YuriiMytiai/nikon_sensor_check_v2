@@ -27,7 +27,7 @@ class RGBThreshProcessor:
             slider.setMinimum(0)
             slider.setMaximum(255)
             slider.setSingleStep(1)
-            slider.setValue(200)
+            slider.setValue(100)
 
             if slider == self.r_slider:
                 color = 'red'
