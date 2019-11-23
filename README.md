@@ -10,7 +10,7 @@ Bad pixels are pixels that return constant non-zero RGB values regardless exposu
 
 
 You can change RGB values thresholds using corresponding sliders.
-Usually it's ok to use RGB values more than 50 to check for bad pixels and RGB values more than 220 to check for dead pixels
+Usually it's ok to use RGB values less than 100 to check for bad pixels and RGB values more than 220 to check for dead pixels
 As each pixel has 3 independent (in theory) channels, you can found that search for the broken pixels performs on 3 channels independently.
 
 Probably this app can be used for other than Nikon cameras too (it was tested only with Nikon cameras), but you should change QFileDialog filter in files_loader.py to be able to load other than .NEF files
