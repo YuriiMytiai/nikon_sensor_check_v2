@@ -14,3 +14,7 @@ Usually it's ok to use RGB values more than 200 to check for bad pixels and RGB 
 As each pixel has 3 independent (in theory) channels, you can found that search for the broken pixels performs on 3 channels independently.
 
 Probably this app can be used for other than Nikon cameras too (it was tested only with Nikon cameras), but you should change QFileDialog filter in files_loader.py to be able to load other than .NEF files
+
+
+to run the app just run main_window.py:
+`python main_window.py`
