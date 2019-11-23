@@ -2,11 +2,11 @@
 Checks Nikon camera sensor for the dead and bad pixels
 
 It uses 2 RAW (for Nion raw image has *.NEF extension) photos: 
-1. Black image: it should be taken with high exposure with closed (by a cap) lens or without lens (with closed by a cap bayonet mount)
-2. White image: it should be taken with high exposure with open lens (remove a cap from the lens)
+1. Black image: it should be taken with high exposure with closed (by a cap) lens or without lens (with closed by a cap bayonet mount), with maximum F number (maximum closed aperture) and ISO equal or bigger than 1600
+2. White image: it should be taken with high exposure with open lens (remove a cap from the lens), with maximum F number (maximum closed aperture) and ISO equal or bigger than 1600
 
 Dead pixels are pixels that don't respond to the light. Such pixels return low RGB values even for the long exposure shot(they will be detected when processing White image)
-Bad pixels are pixels that return constant non-zero RGB values regardless exposure time or pixels that return incorrect RGB values (they will be detected when processing Black image).
+Bad (Hot) pixels are pixels that return constant non-zero RGB values regardless exposure time or pixels that return incorrect RGB values (they will be detected when processing Black image).
 
 
 You can change RGB values thresholds using corresponding sliders.
