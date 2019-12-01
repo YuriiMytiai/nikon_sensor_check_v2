@@ -18,7 +18,7 @@
     <rect>
      <x>60</x>
      <y>30</y>
-     <width>1061</width>
+     <width>1571</width>
      <height>51</height>
     </rect>
    </property>
@@ -63,6 +63,26 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QPushButton" name="test_img_sel_btn">
+      <property name="maximumSize">
+       <size>
+        <width>120</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Test image</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="test_img_path_label">
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QLabel" name="info_label">
@@ -71,7 +91,7 @@
      <x>1350</x>
      <y>510</y>
      <width>281</width>
-     <height>141</height>
+     <height>171</height>
     </rect>
    </property>
    <property name="text">
@@ -113,14 +133,14 @@
      <x>1350</x>
      <y>710</y>
      <width>271</width>
-     <height>211</height>
+     <height>261</height>
     </rect>
    </property>
    <property name="text">
     <string/>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>1350</x>
@@ -204,13 +224,13 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>1440</x>
-     <y>410</y>
+     <y>350</y>
      <width>102</width>
-     <height>66</height>
+     <height>101</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="process_btns_Vlayout">
@@ -225,6 +245,13 @@
      <widget class="QPushButton" name="process_wht_btn">
       <property name="text">
        <string>Process White</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="process_test_btn">
+      <property name="text">
+       <string>Apply mask</string>
       </property>
      </widget>
     </item>

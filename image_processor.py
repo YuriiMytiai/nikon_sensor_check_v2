@@ -13,10 +13,14 @@ class ImageProcessor:
         self.events_processor = events_processor
         self.main_window = main_window
 
+        self.broken_pixel_coordinates = []
+        self.image_sizes = {}
+
         self.img_scroll_area = self.main_window.image_scroll_area
 
         self.proc_blk_pic_btn = self.main_window.process_blk_btn
         self.proc_wht_pic_btn = self.main_window.process_wht_btn
+        self.proc_test_pic_btn = self.main_window.process_test_btn
 
         self.info_label = self.main_window.info_label
 
@@ -39,6 +43,7 @@ class ImageProcessor:
     def connect_btns_with_handlers(self):
         self.proc_blk_pic_btn.clicked.connect(partial(self.btns_handler, 'blk'))
         self.proc_wht_pic_btn.clicked.connect(partial(self.btns_handler, 'wht'))
+        self.proc_test_pic_btn.clicked.connect(self.apply_mask)
 
     def btns_handler(self, img_type):
         # get image path:
@@ -53,34 +58,73 @@ class ImageProcessor:
 
         # load img
         raw_img = rawpy.imread(str(pic_path))
+
+        if not self.check_sizes(raw_img, img_type):
+            return
+
         rgb = raw_img.postprocess()
 
-        broken_pixel_coordinates = self.find_broken_pixels(rgb, rgb_thresholds, img_type)
+        self.find_broken_pixels(rgb, rgb_thresholds, img_type)
 
         qt_image = QImage(qimage2ndarray.array2qimage(rgb))
 
+        self.show_pictures(qt_image, img_type)
+
+        self.print_info()
+
+    def apply_mask(self):
+        pic_path = self.events_processor.files_loader.test_pic_path
+        if pic_path is None:
+            self.raise_err_window('Test')
+            return
+
+        img_type = 'test'
+
+        # load img
+        raw_img = rawpy.imread(str(pic_path))
+
+        if not self.check_sizes(raw_img, img_type):
+            return
+
+        rgb = raw_img.postprocess()
+
+        qt_image = QImage(qimage2ndarray.array2qimage(rgb))
+
+        self.show_pictures(qt_image, img_type)
+
+    def show_pictures(self, qt_image, img_type):
         miniature_pixmap = QPixmap.fromImage(qt_image)
-        miniature_pixmap = self.highlight_broken_pixels(miniature_pixmap, broken_pixel_coordinates, miniature=True, img_type=img_type)
+        miniature_pixmap = self.highlight_broken_pixels(miniature_pixmap, miniature=True, img_type=img_type)
         self.image_preview_label.setPixmap(miniature_pixmap)
 
         pixmap = QPixmap.fromImage(qt_image)
-        pixmap = self.highlight_broken_pixels(pixmap, broken_pixel_coordinates, img_type=img_type)
+        pixmap = self.highlight_broken_pixels(pixmap, img_type=img_type)
         self.img_label.setPixmap(pixmap)
         self.img_label.resize(self.img_label.pixmap().size())
 
-        self.print_info(broken_pixel_coordinates)
+    def check_sizes(self, raw_img, img_type):
+        img_size = (raw_img.sizes.width, raw_img.sizes.height)
+        for v in self.image_sizes.values():
+            if img_size != v:
+                self.raise_err_window(img_type.upper(), 'wrong_pic_size')
+                return False
+        self.image_sizes[img_type] = img_size
+        return True
 
     @staticmethod
-    def raise_err_window(image_name):
+    def raise_err_window(image_name, err_type='file_error'):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Critical)
-        msg.setText(f'{image_name} image was not chosen! Please, select an image')
+        if err_type == 'file_error':
+            msg.setText(f'{image_name} image was not chosen! Please, select an image')
+        elif err_type == 'wrong_pic_size':
+            msg.setText(f'Picture size of {image_name} image is different from other images')
         msg.setWindowTitle("Error")
         msg.exec()
 
-    @staticmethod
-    def find_broken_pixels(image, thresholds, pic_type):
-        broken_pixel_coordinates = []
+    def find_broken_pixels(self, image, thresholds, pic_type):
+        self.broken_pixel_coordinates = []
+
         for channel in range(0, 3):
             chan_img = image[:, :, channel]
             chan_threshold = thresholds[channel]
@@ -94,21 +138,18 @@ class ImageProcessor:
             for i in range(0, chan_broken_pixel_idxs[0].shape[0]):
                 coordinates.append((chan_broken_pixel_idxs[0][i], chan_broken_pixel_idxs[1][i]))
 
-            broken_pixel_coordinates.append(coordinates)
+            self.broken_pixel_coordinates.append(coordinates)
 
-        return broken_pixel_coordinates
-
-    @staticmethod
-    def highlight_broken_pixels(pixmap, broken_pixels_coordinates, miniature=False, img_type='blk'):
+    def highlight_broken_pixels(self, pixmap, miniature=False, img_type='blk'):
 
         colors = ((255, 0, 0), (0, 255, 0), (0, 0, 255))
 
         painter = QPainter()
         painter.begin(pixmap)
 
-        for (color, pixel_coordinates) in zip(colors, broken_pixels_coordinates):
+        for (color, pixel_coordinates) in zip(colors, self.broken_pixel_coordinates):
             for pixel_coordinate in pixel_coordinates:
-                cur_color = QColor(color[0], color[1], color[2]) if not miniature else (QColor(255, 255, 255) if img_type == 'blk' else QColor(0, 0, 0))
+                cur_color = QColor(color[0], color[1], color[2]) if not miniature else (QColor(255, 255, 255) if img_type == 'blk' else QColor(255, 0, 0))
                 line_weight = 1 if not miniature else 20
                 painter.setPen(QPen(cur_color, line_weight))
                 diameter = int(100) if not miniature else int(300)
@@ -117,13 +158,13 @@ class ImageProcessor:
 
         return pixmap
 
-    def print_info(self, broken_pixel_coordinates):
-        all_ch_bad_pixels_set = set(broken_pixel_coordinates[0])
-        all_ch_bad_pixels_set = all_ch_bad_pixels_set & set(broken_pixel_coordinates[1])
-        all_ch_bad_pixels_set = all_ch_bad_pixels_set & set(broken_pixel_coordinates[2])
-        info_str = f'Number of bad pixels:\nR channel: {len(broken_pixel_coordinates[0])}\n' \
-            f'G channel: {len(broken_pixel_coordinates[1])}\n' \
-            f'B channel: {len(broken_pixel_coordinates[2])}\n\n' \
+    def print_info(self):
+        all_ch_bad_pixels_set = set(self.broken_pixel_coordinates[0])
+        all_ch_bad_pixels_set = all_ch_bad_pixels_set & set(self.broken_pixel_coordinates[1])
+        all_ch_bad_pixels_set = all_ch_bad_pixels_set & set(self.broken_pixel_coordinates[2])
+        info_str = f'Number of bad pixels:\nR channel: {len(self.broken_pixel_coordinates[0])}\n' \
+            f'G channel: {len(self.broken_pixel_coordinates[1])}\n' \
+            f'B channel: {len(self.broken_pixel_coordinates[2])}\n\n' \
             f'Number of bad pixels in all 3 channels: {len(all_ch_bad_pixels_set)}'
 
         self.info_label.setText(info_str)
