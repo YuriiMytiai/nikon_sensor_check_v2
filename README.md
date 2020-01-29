@@ -1,7 +1,7 @@
 # nikon_sensor_check_v2
 Checks Nikon camera sensor for the dead and bad pixels
 
-It uses 3 RAW (for Nion raw image has *.NEF extension) photos: 
+It uses 3 RAW (Nikon raw image has *.NEF extension) photos: 
 1. Black image: it should be taken with high exposure with closed (by a cap) lens or without lens (with closed by a cap bayonet mount), with maximum F number (maximum closed aperture) and ISO ~200
 2. White image: it should be taken with high exposure with open lens (remove a cap from the lens), with maximum F number (maximum closed aperture) and ISO ~200
 3. Test image: just  a normal shot that you can use to see an influence of broken pixels on the regular picture
